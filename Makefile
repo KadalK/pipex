@@ -6,7 +6,8 @@ HEAD = includes/pipex.h
 SRC_DIR = src/
 OBJ_DIR = objs/
 
-SRC_FILES =	main.c
+SRC_FILES =	main.c	\
+			pather.c
 
 OBJS = $(addprefix $(OBJ_DIR), $(SRC_FILES:.c=.o))
 

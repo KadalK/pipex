@@ -21,6 +21,7 @@
 # include <unistd.h>
 # include <stdio.h>
 #include <fcntl.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 
 typedef struct s_exe
@@ -29,5 +30,15 @@ typedef struct s_exe
 	int		*tab;
 	char	*cmd[];
 } t_exe;
+
+//pather.c
+char	*get_path(char **envp);
+char	*the_path(char *cmd, char **envp);
+char	*get_access(char *cmd, char **envp);
+
+void	freeman(char **man);
+int		exec_arg(char *cmd, char **envp);
+int	hen_lays(char *cmd, char **envp, int fd_pipe[2], int mod);
+
 
 #endif

@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "pipex.h"
+#include "../includes/pipex.h"
 
 void	freeman(char **man)
 {
@@ -23,100 +23,100 @@ void	freeman(char **man)
 		x++;
 	}
 	free(man);
-	man =	NULL;
+	man = NULL;
 }
 
-char *get_path(char **envp)
+int	exec_arg(char *cmd, char **envp)
 {
+	char	**split_cmd;
 	char	*path;
 
-	while (envp)
-	{
-		if (ft_strnstr(*envp, "PATH=", 5))
-			break;
-		envp++;
-	}
-	if (!envp)
-		return (NULL);
-	path = *envp;
-	*path += 5;
-	return (path);
-}
-
-char	*the_path(char *str, char **envp)
-{
-	char	**split_path;
-	char	*ultimate_path;
-	char	*tmp;
-	size_t i;
-
-	i = -1;
-	tmp = get_path(envp) + 5;
-	if (!tmp)
-		return (NULL);
-	split_path = ft_split(tmp , ':');
-	if (!split_path)
-		return NULL;
-	while(split_path[++i])
-	{
-		ultimate_path = ft_strjoin(split_path[i], "/");
-		tmp = ft_strjoin(ultimate_path, str);
-		if (access(tmp, F_OK | X_OK) == 0)
-			return (freeman(split_path), free(ultimate_path), tmp);
-		free(ultimate_path);
-		free(tmp);
-	}
-	freeman(split_path);
-	return (NULL);
-}
-
-int	exec_arg( t_exe *exe, char *cmd, char **envp)
-{
-	size_t	i;
-	char	**split_cmd;
-
-	i = 0;
 	split_cmd = ft_split(cmd, ' ');
-	exe->path = the_path(cmd, envp);
-
-	if (exe->path == NULL)
-		return (0);
-	else
-	{
-		if (execve(the_path(cmd, envp), split_cmd, envp) == -1)
-			return (0);
-	}
+	path = the_path(split_cmd[0], envp);
+	if (!path)
+		return (free(path), freeman(split_cmd), -1); //msg
+	if (execve(path, split_cmd, envp) == -1) // msg
+		return (freeman(split_cmd), free(path), 0);
 	return (1);
 }
 
-int	hen_lays(t_exe *exe, char *cmd, char **envp)
+int	opener(int ac, char **av, int mod)
+{
+	int	fd;
+
+	if (mod == 0)
+	{
+		fd = open(av[1], O_RDONLY);
+		if (fd == -1)
+			return (-1);
+	}
+	else
+	{
+		fd = open(av[ac - 1], O_WRONLY | O_CREAT | O_TRUNC, 0777);
+			if (fd == -1)
+				return (-1);
+	}
+	return (fd);
+}
+
+void	close_fd(int fd_pipe[2])
+{
+	close(fd_pipe[0]);
+	close(fd_pipe[1]);
+}
+
+int	hen_lays(char *cmd, char **envp, int fd_pipe[2], int mod)
 {
 	pid_t	pid;
 
-	if (pipe(exe->tab) == -1)
-		return (-1);
 	pid = fork();
 	if (pid == -1)
 		return (-1);
 	if (pid == 0)
-		exec_arg(exe, cmd, envp);
-	else
-		wait(NULL);
+	{
+		if (mod == 1)
+			if (dup2(fd_pipe[0], STDIN_FILENO) == -1)
+				return (-1);
+		if (mod == 0)
+			if (dup2(fd_pipe[1], STDOUT_FILENO) == -1)
+				return (-1);
+		close_fd(fd_pipe);
+		exec_arg(cmd, envp);
+	}
 	return (0);
 }
 
-int main(int ac, char **av, char **envp)
+int	mother(int ac, char **av, char **envp)
 {
-	char	*final_path;
-	t_exe *exe;
+	int	fd_in;
+	int	fd_out;
+	int	fd_pipe[2];
 
-	exe = NULL;
+	fd_in = opener(ac, av, 0);
+	if (pipe(fd_pipe) == -1)
+		return (-1);
+	if (dup2(fd_in, STDIN_FILENO) == -1)
+		ft_putendl_fd("Invalid infile", 2);
+	hen_lays(av[2], envp, fd_pipe, 0);
+	fd_out = opener(ac, av, 1);
+	if (dup2(fd_out, STDOUT_FILENO) == -1)
+		ft_putendl_fd("Invalid outfile", 2);
+	hen_lays(av[3], envp, fd_pipe, 1);
+	close_fd(fd_pipe);
+	while (wait(NULL) > 0)
+	;
+	return (0);
+}
+
+int	main(int ac, char **av, char **envp)
+{
 	if (!*envp)
 		return (0);
-	if(ac < 2)
+	if (ac < 5)
+	{
+		ft_putendl_fd("Invalid Arguments", 2);
 		return (0);
-	final_path = the_path(av[1], envp);
-	printf("FINAL PATH : %s\n", final_path);
-	free(final_path);
+	}
+	mother(ac, av, envp);
 	return (0);
 }
