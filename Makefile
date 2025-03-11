@@ -7,7 +7,9 @@ SRC_DIR = src/
 OBJ_DIR = objs/
 
 SRC_FILES =	main.c	\
-			pather.c
+			pather.c	\
+			incubator.c	\
+			fd_utils.c
 
 OBJS = $(addprefix $(OBJ_DIR), $(SRC_FILES:.c=.o))
 

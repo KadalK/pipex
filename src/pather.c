@@ -6,7 +6,7 @@
 /*   By: kapinarc <kapinarc@student.42lyon.fr>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/06 16:46:10 by kapinarc          #+#    #+#             */
-/*   Updated: 2025/03/06 16:46:46 by kapinarc         ###   ########.fr       */
+/*   Updated: 2025/03/11 16:53:02 by kapinarc         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,6 @@ char	*get_path(char **envp)
 	size_t	i;
 
 	i = 0;
-
 	if (!envp)
 		return (NULL);
 	while (envp[i])
@@ -29,6 +28,7 @@ char	*get_path(char **envp)
 	return (envp[i] + 5);
 }
 
+//fix le acces direct si il est deja bon || cest ok a faire gaff quand meme
 char	*the_path(char *cmd, char **envp)
 {
 	char	**split_path;
@@ -37,23 +37,25 @@ char	*the_path(char *cmd, char **envp)
 	size_t	i;
 
 	i = -1;
-	tmp = get_path(envp) + 5;
+	tmp = get_path(envp);
 	if (!tmp)
 		return (NULL);
+	tmp += 5;
 	split_path = ft_split(tmp, ':');
 	if (!split_path)
 		return (NULL);
+	if (access(cmd, F_OK) != -1)
+			return(cmd);
 	while (split_path[++i])
 	{
 		ultimate_path = ft_strjoin(split_path[i], "/");
 		tmp = ft_strjoin(ultimate_path, cmd);
-		if (access(tmp, F_OK) != -1)
+		if (!tmp || access(tmp, F_OK) != -1)
 			return (freeman(split_path), free(ultimate_path), tmp);
 		free(ultimate_path);
 		free(tmp);
 	}
-	freeman(split_path);
-	return (NULL);
+	return (freeman(split_path), NULL);
 }
 
 char	*get_access(char *cmd, char **envp)
@@ -63,12 +65,38 @@ char	*get_access(char *cmd, char **envp)
 	return (NULL);
 }
 
+int	exec_arg(char *cmd, char **envp)
+{
+	char	**split_cmd;
+	char	*path;
 
-// ouvrir fichier entree (infile)
-// cree pipe
-// rediriger entree avec infile (dup2(infile, 0))
-// executer premiere commande avec hen_lays en redirigant le contenu dans le pipe (dup2(1, fd[1]))
-// ouvrir fichier de sortie (outfile)
-// executer deuxieme commande avec hen_lays en redirigant le contenu dans le outfile (dup2(1, outfile))
-// a partir du contenu du pipe soit (dup2(0, fddupipe[0]))
-// petit tips oublie pas de close tout les fds des pipes a chaque fois que tu
+	split_cmd = ft_split(cmd, ' ');
+	path = the_path(split_cmd[0], envp);
+	if (!path)
+	{
+		free(path);
+		freeman(split_cmd);
+		return (preturn(-1));
+	}
+	if (execve(path, split_cmd, envp) == -1)
+	{
+		freeman(split_cmd);
+		free(path);
+		return (preturn(-1));
+	}
+	return (1);
+}
+
+void	freeman(char **man)
+{
+	int	x;
+
+	x = 0;
+	while (man && man[x])
+	{
+		free(man[x]);
+		x++;
+	}
+	free(man);
+	man = NULL;
+}

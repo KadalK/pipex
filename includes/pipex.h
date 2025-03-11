@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #ifndef PIPEX_H
-#define PIPEX_H
+# define PIPEX_H
 
 # include "../libft/includes/libft.h"
 # include "../libft/includes/get_next_line.h"
@@ -20,25 +20,24 @@
 # include <stdlib.h>
 # include <unistd.h>
 # include <stdio.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-typedef struct s_exe
-{
-	char	*path;
-	int		*tab;
-	char	*cmd[];
-} t_exe;
+# include <fcntl.h>
+# include <sys/types.h>
+# include <sys/wait.h>
+# include <errno.h>
 
 //pather.c
 char	*get_path(char **envp);
 char	*the_path(char *cmd, char **envp);
 char	*get_access(char *cmd, char **envp);
-
-void	freeman(char **man);
 int		exec_arg(char *cmd, char **envp);
-int	hen_lays(char *cmd, char **envp, int fd_pipe[2], int mod);
-
+void	freeman(char **man);
+//incubator.c
+int		egg(char *cmd, char **envp, int fd_pipe[2], int mod);
+int		mother(int ac, char **av, char **envp);
+//fd_utils.c
+int		opener(int ac, char **av, int mod);
+void	close_fd(int fd_pipe[2]);
+int		close_all(int tab[2], int data2, int value);
+int		preturn(int value);
 
 #endif
